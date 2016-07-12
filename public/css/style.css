@@ -31,6 +31,7 @@
 25. Footer  styles
 26. About  styles
 27. Miscelnious  styles
+28. Input Form Styles (By DRD)
 ****************************************************************************************************************
 ||||||||||||||||||||||||||||            End TABLE OF CONTENT                ||||||||||||||||||||||||||||||||||||
 ****************************************************************************************************************
@@ -1530,7 +1531,7 @@ li {
    login register styles
    ============================== */
 .login-register {
-  background: #F9F9F9;
+  background: #e4e4e4;
 }
 .login-register .thm-container {
   background: #ffffff url(../images/login-bg.png) bottom right no-repeat;
@@ -3493,4 +3494,17 @@ ul.special-checkbox li .input-checker input[type='checkbox'] {
 .single-service-page .image-caption-box .caption-box-img,
 .single-post-page .image-caption-box .caption-box-img {
   width: 248px;
+}
+
+/* ==============================
+   Input Form Styles(By DRD)
+   ============================== */
+
+.form-control{
+  border-radius: 0px;
+}
+
+.form-control:focus{
+  border-color: #ffba00; /*#73BC11 to #ffba00 TP*/
+  box-shadow: 0 0 7px #ffba00; /*#73BC11 to #ffba00 TP*/
 }
