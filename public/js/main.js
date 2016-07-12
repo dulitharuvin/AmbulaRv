@@ -122,7 +122,7 @@ function gMap () {
         });  
 	};
 }
-function contactFormValidation () {
+/*function contactFormValidation () { //comented due to validation problems and not because preventing from submiting by DRD
 
 	if($('.contact-form').length){
 		$('.contact-form').validate({ // initialize the plugin
@@ -153,7 +153,7 @@ function contactFormValidation () {
 			}
 		});
 	}
-}
+}*/
 function stickyHeader () {
 	if ($('.stricky').length) {
 		var strickyScrollPos = 100;
@@ -492,8 +492,8 @@ jQuery(document).on('ready', function () {
 		revolutionSliderActiver();
 		accrodion();
 		selectMenu();
-		contactFormValidation();
-		gMap();
+		//contactFormValidation(); commented by DRD
+		//gMap(); commented by DRD
 		fleetGallery();
 		GalleryFancyboxActivator();		
 		mobileNavToggler();
