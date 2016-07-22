@@ -100,11 +100,7 @@ class Login_model extends CI_Model
 
     public function logout()
     {
-        if($this->session->sess_destroy()){
-            return true;
-        }else{
-            return false;
-        }
+        return $this->session->sess_destroy();
     }
 
 }

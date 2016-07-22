@@ -26,10 +26,14 @@
                 <?php if(isset($_SESSION['user_logged_in']) && $this->session->userdata('user_logged_in')){?>
                     <li>
                         <i class="fa fa-user"></i>
-                        <span>Welcome <?= $this->session->userdata('first_name')?></span>
+                        <?php if($this->session->userdata('user_account_type') == 2){?>
+                            <span>Welcome <?= $this->session->userdata('name')?></span>
+                        <?php }else { ?>
+                            <span>Welcome <?= $this->session->userdata('first_name')?></span>
+                        <?php }?>
                     </li>
                 <?php }else {?>
-                    <a href="<?= base_url('login') ?>">
+                    <a href="<?=base_url('login')?>">
                         <li>
                             <i class="fa fa-key"></i>
                             <span>Login</span>

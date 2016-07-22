@@ -39,7 +39,9 @@ class Login extends CI_Controller
     public function logout()
     {
         if($this->login->logout()){
-            redirect(base_url());
+            redirect('/');
+        }else{
+            redirect('/login');
         }
     }
 
