@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <title>Ambula | Login</title>
     <?php $this->view('common/script_header'); ?>
 </head>
 <body>
