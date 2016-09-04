@@ -6,7 +6,7 @@
  * Date: 1/6/2015
  * Time: 4:17 AM
  */
-class HomeModel
+class Home_model extends CI_Model
 {
 
 

@@ -6,22 +6,25 @@
  * Date: 2/27/2016
  * Time: 11:09 PM
  */
-class ProfileModel
+class Profile_model extends CI_Model
 {
 
-    public function __construct(DataBase $db)
+    public function __construct()
     {
-        $this->db = $db;
+        parent::__construct();
+        $this->load->database();
     }
+
+    ////=============Normal user Profile===============///
 
     public function viewNormalUserInfo()
     {
 
         if (isset($_SESSION['user_logged_in']) && $_SESSION['user_logged_in'] == true) {
             if (isset($_SESSION['username']) && ($_SESSION['user_account_type'] == 1 || $_SESSION['user_account_type'] == 3)) {
-                $sql = "SELECT * FROM users ,user_personal WHERE users_user_id = user_id AND user_name = '" . $_SESSION["username"] . "'";
-                $result = $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
-                return json_encode($result);
+                $sql = "SELECT * FROM users ,user_personal WHERE users_user_id = user_id AND user_name = ?";
+                $result = $this->db->query($sql, array($_SESSION['username']))->row();
+                return $result;
             } else {
                 return false;
             }
@@ -29,6 +32,69 @@ class ProfileModel
             return false;
         }
 
+    }
+
+    ////=============Common user function ================///
+
+    //Get the recipe count of a user
+    public function usersRecipeCount($user_name = '')
+    {
+        $allRecipeSql = "SELECT idRecipe,title,views,rating
+                                    FROM recipes ,users  WHERE recipes.users_user_id = users.user_id AND users.user_name = ?";
+        $recipeCount = $this->db->query($allRecipeSql,array($user_name))->num_rows();
+
+        return $recipeCount;
+    }
+
+    //user profile
+    public function getRecipesByUser($user_name = '', $limit = '')
+    {
+        $offset = $this->uri->segment(4,0);
+
+        $allRecipeSql = "SELECT idRecipe,title,views,rating
+                                    FROM recipes ,users WHERE recipes.users_user_id = users.user_id AND users.user_name = ? LIMIT " . $offset ." , ?";
+
+        //$allRecipeSqlTest = "SELECT idRecipe,title,views,rating FROM recipes ,users WHERE recipes.users_user_id = users.user_id AND users.user_name = ?";
+
+        $recipes = $this->db->query($allRecipeSql, array($user_name,$limit));
+
+        //$recipesTest = $this->db->query($allRecipeSqlTest, array($user_name));
+
+        return $recipes;
+    }
+
+    public function refreshUserField()
+    {
+        if (isset($_SESSION['user_logged_in']) && $_SESSION['user_logged_in'] == true) {
+            if (isset($_SESSION['username']) && ($_SESSION['user_account_type'] == 1 || $_SESSION['user_account_type'] == 3 || $_SESSION['user_account_type'] == 2)) {
+                $table = $_POST['userTable'];
+                $column = $_POST['userColumn'];
+                if ($table == 'users') {
+                    $sql = "SELECT " . $column . " FROM " . $table . "WHERE user_id = :logged_in_user";
+                    $query = $this->db->prepare($sql);
+                    $query->execute(array(':logged_in_user' => $_SESSION['uid']));
+                    $result = $query->fetchAll(PDO::FETCH_ASSOC);
+                    return json_encode($result);
+                } else {
+                    $sql = "SELECT " . $column . " FROM " . $table . " WHERE users_user_id = :logged_in_user";
+                    $query = $this->db->prepare($sql);
+                    $query->execute(array(':logged_in_user' => $_SESSION['uid']));
+                    $result = $query->fetchAll(PDO::FETCH_ASSOC);
+                    return json_encode($result);
+                }
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    public function checkUserExistAndGetType($user_name = '')
+    {
+        $userExistQuery = "SELECT user_account_type FROM users WHERE user_name = ?";
+        $result = $this->db->query($userExistQuery, array($user_name))->row();
+        return $result;
     }
 
     public function updateUserField()
@@ -247,7 +313,7 @@ class ProfileModel
 
         $sql = "SELECT cat.id_product_categories, cat.title FROM product_categories AS cat JOIN (SELECT cupc.Product_categories_id_product_categories FROM cooperate_user_has_product_categories AS cupc, (SELECT com.idcommercial_user FROM commercial_user AS com, (SELECT user_id FROM users WHERE user_name = :user_name) AS user WHERE com.users_user_id = user.user_id) AS comuser WHERE cupc.cooperate_user_id = comuser.idcommercial_user) AS ids WHERE cat.id_product_categories=ids.Product_categories_id_product_categories";
         $query = $this->db->prepare($sql);
-        $query->execute(array(':user_name'=>$user_name));
+        $query->execute(array(':user_name' => $user_name));
         $result = $query->fetchAll(PDO::FETCH_ASSOC);
         return json_encode($result);
     }
@@ -255,30 +321,5 @@ class ProfileModel
 
     /*=====================================================================*/
 
-    public function refreshUserField()
-    {
-        if (isset($_SESSION['user_logged_in']) && $_SESSION['user_logged_in'] == true) {
-            if (isset($_SESSION['username']) && ($_SESSION['user_account_type'] == 1 || $_SESSION['user_account_type'] == 3 || $_SESSION['user_account_type'] == 2)) {
-                $table = $_POST['userTable'];
-                $column = $_POST['userColumn'];
-                if ($table == 'users') {
-                    $sql = "SELECT " . $column . " FROM " . $table . "WHERE user_id = :logged_in_user";
-                    $query = $this->db->prepare($sql);
-                    $query->execute(array(':logged_in_user' => $_SESSION['uid']));
-                    $result = $query->fetchAll(PDO::FETCH_ASSOC);
-                    return json_encode($result);
-                } else {
-                    $sql = "SELECT " . $column . " FROM " . $table . " WHERE users_user_id = :logged_in_user";
-                    $query = $this->db->prepare($sql);
-                    $query->execute(array(':logged_in_user' => $_SESSION['uid']));
-                    $result = $query->fetchAll(PDO::FETCH_ASSOC);
-                    return json_encode($result);
-                }
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
-    }
+
 }

@@ -6,64 +6,107 @@
  * Date: 2/27/2016
  * Time: 11:10 PM
  */
-class profile extends Controller
+class Profile extends CI_Controller
 {
 
-    public $user_name;
-    protected $user;
-    protected $profile;
+    private $userName;
+
+    private $limit = 2;
+
 
     public function __construct()
     {
-        parent:: __construct();
-        $this->user = $this->model('HomeModel');
-        $this->profile = $this->model("ProfileModel");
+        parent::__construct();
+        $this->load->model('Profile_model', 'profile');
+    }
 
+    public function index($user = '')
+    {
+        $this->userName = $user;
+
+        if (isset($_SESSION["user_logged_in"]) && $_SESSION["user_logged_in"] == true && isset($_SESSION["username"])) {
+            if ($this->profile->checkUserExistAndGetType($user) != null) {
+                if ($this->profile->checkUserExistAndGetType($user)->user_account_type == 1) {
+
+                    $normUser = $this->viewNormalUserInfo($this->userName);
+                    $recipes = $this->getRecipesByUser($this->userName, $this->limit);
+                    $recipeCount = $this->usersRecipeCount($this->userName);
+
+                    $config["full_tag_open"] = '<ul class="page-navigation">';
+                    $config["full_tag_close"] = '</ul>';
+                    $config["first_link"] = "&laquo;";
+                    $config["first_tag_open"] = "<li>";
+                    $config["first_tag_close"] = "</li>";
+                    $config["last_link"] = "&raquo;";
+                    $config["last_tag_open"] = "<li>";
+                    $config["last_tag_close"] = "</li>";
+                    $config['next_link'] = '<i class="fa fa-arrow-right"></i>';
+                    $config['next_tag_open'] = '<li>';
+                    $config['next_tag_close'] = '<li>';
+                    $config['prev_link'] = '<i class="fa fa-arrow-left"></i>';
+                    $config['prev_tag_open'] = '<li>';
+                    $config['prev_tag_close'] = '<li>';
+                    $config['cur_tag_open'] = '<li><span>';
+                    $config['cur_tag_close'] = '</span></li>';
+                    $config['num_tag_open'] = '<li>';
+                    $config['num_tag_close'] = '</li>';
+                    $config['total_rows'] = $recipeCount;
+                    $config['per_page'] = $this->limit;
+                    $config['uri_segment'] = 4;
+                    $config['base_url'] = site_url('profile/index/'.$this->userName);
+                    $this->load->library('pagination',$config);
+                    $page_links = $this->pagination->create_links();
+
+                    $data = array('normUser' => $normUser, 'recipeList' => $recipes, 'recipeCount' => $recipeCount, 'page_links' => $page_links);
+
+                    $this->load->view('profile/normal_user_profile', $data);
+
+                } else if ($this->profile->checkUserExistAndGetType($user)->user_account_type == 3) {
+
+                    $adminUser = $this->viewNormalUserInfo($this->userName);
+
+                    $recipes = $this->profile->getRecipesByUser($this->userName, $this->limit);
+
+                    $data = array('normUser' => $adminUser, 'recipeList' => $recipes);
+
+                    $this->load->view('profile/normal_user_profile', $data);
+
+                } else if ($this->profile->checkUserExistAndGetType($user)->user_account_type == 2) {
+
+                    $this->load->view('profile/cooperate_user_updated');
+
+                }
+            } else {
+                $this->load->view('_template/error');
+            }
+        } else {
+            redirect('/login');
+        }
     }
 
     ////=============Normal user Profile===============///
 
-    public function index($user = '')
+    public function viewNormalUserInfo($user_name = '')
     {
-        //echo $_GET['user'];
-        if (isset($_SESSION["user_logged_in"]) && $_SESSION["user_logged_in"] == true && isset($_SESSION["username"])) {
-            if ($this->user->checkUserExistAndGetType($user) != '') {
-                if ($this->user->checkUserExistAndGetType($user)->user_account_type == 1) {
-                    $this->user_name = $user;
-                    $this->view('user_profile/normal_user_profile');
-                } else if ($this->user->checkUserExistAndGetType($user)->user_account_type == 3) {
-                    $this->user_name = $user;
-                    $this->view('user_profile/normal_user_profile');
-                } else if ($this->user->checkUserExistAndGetType($user)->user_account_type == 2) {
-                    $this->user_name = $user;
-                    $this->view('user_profile/cooperate_user_updated');
-                }
-            } else {
-                $this->view('_template/error');
-            }
-        } else {
-            Header('Location:/Ambula/login/');
-        }
+        return $this->profile->viewNormalUserInfo($user_name);
     }
 
-    //method call to HomeModel to view User First, Last Names and pic
-    public function getUser()
-    {
-        return $this->user->getUser($this->user_name);
-    }
+    ///====================================================///
 
-    //method call to HomeModel To view Recipes
-    public function getRecipesByUser($userId = '')
-    {
-        return $this->user->getRecipesByUser($userId);
-    }
-
-    public function viewNormalUserInfo()
-    {
-        echo $this->profile->viewNormalUserInfo();
-    }
 
     ////=============Common user function ================///
+
+    //method call to HomeModel To view Recipes
+    public function getRecipesByUser($user_name = '', $limit = '')
+    {
+        return $this->profile->getRecipesByUser($user_name, $limit);
+    }
+
+    //method to get the count of recipes by a user
+    public function usersRecipeCount($user_name = '')
+    {
+        return $this->profile->usersRecipeCount($user_name);
+    }
 
     //update the profile picture
     public function updateProfilePicture()
