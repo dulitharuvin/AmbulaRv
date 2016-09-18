@@ -377,7 +377,7 @@ function singleRecipeCarousel () {
 				            items:6,
 				            autoWidth: false
 				        }
-				    },
+				    }
 				})
 				.on('click', '.owl-item', function () {
 					$sync1.trigger('to.owl.carousel', [$(this).index(), duration, true]);
@@ -394,24 +394,91 @@ function singleRecipeCarousel () {
 	};
 }
 
+function validateAndSubmitRecipe(){
+
+    //$.validator.addMethod("valueNotEquals", function(value, element, arg){
+    //    alert('ss');
+    //    return arg != value;
+    //}, "Value must not equal arg.");
+    ////
+    //var uploader = $("#uploader").pluploadQueue();
+    //var files_remaining = uploader.files.length;
+    //if(files_remaining ==0){
+    //    alert("Ok");
+    //
+    //}else{
+    //    alert("Upload the files and continue");
+    //}
+
+    $("#contact-form").validate({
+        rules: {
+            recipetitle: "required"
+
+        },
+        messages: {
+            recipetitle: "this is required"
+
+        }
+        //submitHandler: function(form) {
+        //    alert('');
+        //    $(form).submit();
+        //}
+    });
+
+    //$('.contact-form').on('submit', function() {
+    //
+    //    if (validateRecipe()) {
+    //
+    //
+    //                    $.ajax({
+    //                        url: $(this).attr('action'),
+    //                        type: $(this).attr('method'),
+    //                        data: new FormData(this), // Data sent to server, a set of key/value pairs (i.e. form fields and values)
+    //                        contentType: false,       // The content type used when sending data to the server.
+    //                        cache: false,             // To unable request pages to be cached
+    //                        processData: false,        // To send DOMDocument or non processed data file it is set to false
+    //                        success: function (json) {
+    //                            alert(json);
+    //                            window.onbeforeunload = function () {
+    //                                return null;
+    //                            };
+    //                            alert(json);
+    //                            var recipeId = json.substring(json.lastIndexOf(":") + 1, json.lastIndexOf(";"));
+    //                            window.location.href = "/recipes/recipeSuccess?id=" + recipeId;
+    //                        }
+    //                    });
+    //
+    //    }
+    //    else{
+    //
+    //        return false;
+    //    }
+    //
+    //    return false;
+    //
+    //});
+
+}
+
+
 function plUploadActivar () {
     $("#uploader").plupload({
         // General settings
         runtimes : 'html5,flash,silverlight,html4',
-        url : "/examples/upload",
+        url : "/AmbulaRV/recipe/uploadRecipeImages",
 
         // Maximum file size
         max_file_size : '2mb',
 
         chunk_size: '1mb',
 
-        // Resize images on clientside if we can
-        resize : {
-            width : 200,
-            height : 200,
-            quality : 90,
-            crop: true // crop to exact dimensions
-        },
+        //// Resize images on clientside if we can
+        //resize : {
+        //    width : 200,
+        //    height : 200,
+        //    quality : 90,
+        //    crop: true // crop to exact dimensions
+        //},
 
         // Specify what files to browse for
         filters : [
@@ -439,8 +506,93 @@ function plUploadActivar () {
         flash_swf_url : '/plupload/js/Moxie.swf',
 
         // Silverlight settings
-        silverlight_xap_url : '/plupload/js/Moxie.xap'
+        silverlight_xap_url : '/plupload/js/Moxie.xap',
+
+        init: {
+            FilesAdded: function (objUploader, arrFiles) {
+                var regex = /(?:\.([^.]+))?$/;
+
+                for(var i = 0 ; i< arrFiles.length ;i++ )
+                {
+                    var ext = regex.exec(arrFiles[i].name)[1];
+                    arrFiles[i].name = (ext == undefined) ? (i) : (i) + '.' + ext;
+                }
+
+            },
+
+            UploadFile: function (objUploader, file) {
+                //var regex = /(?:\.([^.]+))?$/;
+                //for (var i = 0; i < uploader.files.length; i++) {
+                //    var ext = regex.exec(uploader.files[i].name)[1];
+                //    uploader.files[i].name = (ext == undefined) ? (i+1) : (i+1) + '.' + ext;
+                //}
+                //uploader.start();
+            },
+
+            BeforeUpload: function (up, file) {
+            }
+        }
+
     });
+
+    var uploader = $("#uploader").plupload('getUploader');
+
+    uploader.bind('BeforeUpload', function(up, file) {
+        if('thumb' in file){
+
+            //thumb
+            up.settings.url = '/AmbulaRV/recipe/uploadRecipeImages?diretorio=thumbs',
+                up.settings.resize = {width : 100, height : 75, quality : 60};
+
+            // medium size
+            up.settings.url = '/AmbulaRV/recipe/uploadRecipeImages?diretorio=medium',
+                up.settings.resize = {width : 200, height : 150, quality : 60};
+
+        }else{
+            up.settings.url = '/AmbulaRV/recipe/uploadRecipeImages?diretorio=full-size',
+                up.settings.resize = {quality : 100};
+
+        }
+        uploader.bind('FileUploaded', function(up, file) {
+            if(!('thumb' in file)) {
+                file.thumb = true;
+                file.loaded = 0;
+                file.percent = 0;
+                file.status = plupload.QUEUED;
+                up.trigger("QueueChanged");
+                up.refresh();
+
+            }
+
+
+        });
+
+    });
+
+    $('#contact-form').submit(function (e) {
+
+        // Validate number of uploaded files
+        if (uploader.total.uploaded == 0) {
+            // Files in queue upload them first
+            if (uploader.files.length > 0) {
+                // When all files are uploaded submit form
+                uploader.bind('UploadProgress', function () {
+                    if (uploader.total.uploaded == uploader.files.length){
+
+                        validateAndSubmitRecipe();
+                        $('#contact-form').submit();
+                    }
+                });
+
+                uploader.start();
+            } else
+                alert('You must at least upload one file.');
+
+            e.preventDefault();
+        }
+    });
+
+
 }
 
 function thmSpinner () {
@@ -467,6 +619,7 @@ function thmSpinner () {
 	                if (recipeMinutes.toString().length == 1) {
 	                    recipeMinutes = '0' + recipeMinutes;
 	                }
+                    Self.find('.time').text( recipeHours + ':' + recipeMinutes );
 					Self.find('.spinner-value').text( recipeHours + ':' + recipeMinutes );
 				}
 			});
@@ -478,7 +631,8 @@ function thmSpinner () {
 
             if (recipeMinutes.toString().length == 1) {
                 recipeMinutes = '0' + recipeMinutes;
-            }    
+            }
+            Self.find('.time').text( recipeHours + ':' + recipeMinutes );
 			Self.find('.spinner-value').text( recipeHours + ':' + recipeMinutes );			
 		});
 
@@ -486,9 +640,60 @@ function thmSpinner () {
 }
 
 
+function addNewEntries(){
+
+    $(document).on('click', '.btn-add', function (e) {
+        e.preventDefault();
+
+       $( "select" ).selectmenu( "destroy" );
+
+        var controlForm = $('.ingredients-control'),
+            currentEntry = $(this).parents('.entry:first'),
+            newEntry = $(currentEntry.clone()).appendTo(controlForm);
+
+        newEntry.find('input').val('');
+        selectMenu();
+
+
+        controlForm.find('.entry:not(:last) .btn-add')
+            .removeClass('btn-add').addClass('btn-remove')
+            .removeClass('btn-success').addClass('btn-danger')
+            .html('<span class="glyphicon glyphicon-minus"></span>');
+
+
+
+    }).on('click', '.btn-remove', function (e) {
+        $(this).parents('.entry:first').remove();
+
+        e.preventDefault();
+        return false;
+    });
+
+    $(document).on('click', '.btn-add', function (e) {
+        e.preventDefault();
+
+        var controlForm = $('.directions-control'),
+            currentEntry = $(this).parents('.entry2:first'),
+            newEntry = $(currentEntry.clone()).appendTo(controlForm);
+
+        newEntry.find('input').val('');
+        //newEntry.find('img').attr('src','/public/img/no_preview_available.jpg');
+        controlForm.find('.entry2:not(:last) .btn-add')
+            .removeClass('btn-add').addClass('btn-remove')
+            .removeClass('btn-success').addClass('btn-danger')
+            .html('<span class="glyphicon glyphicon-minus"></span>');
+    }).on('click', '.btn-remove', function (e) {
+        $(this).parents('.entry2:first').remove();
+
+        e.preventDefault();
+        return false;
+    });
+}
+
 // instance of fuction while Document ready event	
 jQuery(document).on('ready', function () {
 	(function ($) {
+        addNewEntries();
 		revolutionSliderActiver();
 		accrodion();
 		selectMenu();
@@ -505,6 +710,8 @@ jQuery(document).on('ready', function () {
 		singleRecipeCarousel();
 		thmSpinner();
 		recipeEditorCarousel();
+
+        //checkUploadFileState();
 	})(jQuery);
 });
 
