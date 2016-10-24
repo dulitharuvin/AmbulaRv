@@ -17,7 +17,12 @@ class Recipe extends CI_Controller
 
     public function view_add_new_recipe()
     {
-        $this->load->view('recipe/add_new_recipe');
+        if(isset($_SESSION['uid'])){
+            $this->load->view('recipe/add_new_recipe');
+        }else{
+            redirect('/login');
+        }
+
     }
 
     public function add_new_recipe()
@@ -25,5 +30,44 @@ class Recipe extends CI_Controller
         if($this->recipe->add_new_recipe()){
 
         }
+    }
+
+    public function viewRecipe($id=''){
+        $data['id'] = $_GET['id'];
+        $this->load->view('recipe/single-recipe',$data);
+    }
+
+    public function getRecipe($id='',$lang =''){
+      return  $this->recipe->getRecipe($id,$lang);
+    }
+
+    public function getRecipeIngredients($recipeId = '')
+    {
+        return $this->recipe->getRecipeIngredients($recipeId);
+    }
+
+    public function getRecipeImages($recipeId = '')
+    {
+        return $this->recipe->getRecipeImages($recipeId);
+    }
+
+    public function getRecipeDescription($recipeId = '')
+    {
+        return $this->recipe->getRecipeDescription($recipeId);
+    }
+
+    public function uploadRecipeImages()
+    {
+        return $this->recipe->uploadRecipeImages();
+    }
+
+    public function getCategoriesArray()
+    {
+        return $this->recipe->getCategoriesArray();
+    }
+
+    public function submitRecipe()
+    {
+        return $this->recipe->submitRecipe();
     }
 }
